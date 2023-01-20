@@ -468,7 +468,7 @@ class COCOeval:
             AP_050_095 = _summarize(1)
             AP_050 = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2])
             AP_075 = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[2])
-            #AP_a_S = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2])
+            #AP_a_Sgit = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2])
             #AP_a_M = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2])
             #AP_a_L = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2])
             AR_MD_1 = _summarize(0, maxDets=self.params.maxDets[0])
