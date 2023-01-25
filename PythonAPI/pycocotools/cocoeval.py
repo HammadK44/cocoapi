@@ -477,14 +477,17 @@ class COCOeval:
             #AR_a_S = _summarize(0, areaRng='small', maxDets=self.params.maxDets[2])
             #AR_a_M = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2])
             #AR_a_L = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2])
+
             
             metrics_dict = {
-                "ap50": AP_050,
-                "ap75": AP_075,
-                "ap5095": AP_050_095,
-                "ar1": AR_MD_1,
-                "ar10": AR_MD_10,
-                "ar100": AR_MD_100}
+                "map10": "None",
+                "map50": AP_050,
+                "map75": AP_075,
+                "map5095": AP_050_095,
+                "map10_11": "None",
+                "mar1": AR_MD_1,
+                "mar10": AR_MD_10,
+                "mar100": AR_MD_100}
 
 
             return metrics_dict
