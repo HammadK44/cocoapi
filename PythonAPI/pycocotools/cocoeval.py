@@ -457,18 +457,15 @@ class COCOeval:
             return mean_s
     
 
-        #ToDo: stats[0] = _summarize(1) calculates the average precision over all IoU thresholds, area ranges, 
-        # and maximum number of detections, but it doesn't calculate the mAP (mean average precision) across all classes.
-
-        #stats[6] = _summarize(0, maxDets=self.params.maxDets[0]) calculates the average recall over all IoU thresholds, area
-        #ranges, and a maximum number of detections specified,but it's not the mAR (mean average recall) across all classes.
-
         def _summarizeDets():
             
+            print(self.params.catIds)
+
             AP_050_095 = _summarize(1)
+            AP_010 = _summarize(1, iouThr=0.10, maxDets=self.params.maxDets[2])
             AP_050 = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2])
             AP_075 = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[2])
-            #AP_a_Sgit = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2])
+            #AP_a_S = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2])
             #AP_a_M = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2])
             #AP_a_L = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2])
             AR_MD_1 = _summarize(0, maxDets=self.params.maxDets[0])
@@ -480,7 +477,7 @@ class COCOeval:
 
             
             metrics_dict = {
-                "map10": "None",
+                "map10": AP_010,
                 "map50": AP_050,
                 "map75": AP_075,
                 "map5095": AP_050_095,
