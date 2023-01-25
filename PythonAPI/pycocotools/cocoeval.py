@@ -455,7 +455,6 @@ class COCOeval:
                 mean_s = np.mean(s[s>-1])
             
             return mean_s
-    
 
         def _summarizeDets():
             
@@ -524,11 +523,11 @@ class Params:
         self.imgIds = []
         self.catIds = []
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
-        self.iouThrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
-        self.recThrs = np.linspace(.0, 1.00, int(np.round((1.00 - .0) / .01)) + 1, endpoint=True)
+        self.iouThrs = np.append(np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True),0.10)
+        self.recThrs = np.append(np.linspace(.0, 1.00, int(np.round((1.00 - .0) / .01)) + 1, endpoint=True),0.10)
         self.maxDets = [1, 10, 100]
-        self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
-        self.areaRngLbl = ['all', 'small', 'medium', 'large']
+        self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2],[0 ** 2, 1e5 ** 2]]
+        self.areaRngLbl = ['all', 'small', 'medium', 'large', 'all']
         self.useCats = 1
 
     def setKpParams(self):
