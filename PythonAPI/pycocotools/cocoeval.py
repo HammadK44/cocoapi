@@ -436,6 +436,7 @@ class COCOeval:
 
             aind = [i for i, aRng in enumerate(p.areaRngLbl) if aRng == areaRng]
             mind = [i for i, mDet in enumerate(p.maxDets) if mDet == maxDets]
+
             if ap == 1:
                 # dimension of precision: [TxRxKxAxM]
                 s = self.eval['precision']
@@ -483,7 +484,6 @@ class COCOeval:
 
                 AP_050_095 = _summarize(1)
                 AP_010 = _summarize(1, iouThr=0.10, maxDets=self.params.maxDets[2])
-                AP_020 = _summarize(1, iouThr=0.20, maxDets=self.params.maxDets[2])
                 AP_050 = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2])
                 AP_075 = _summarize(1, iouThr=.75, 
                 maxDets=self.params.maxDets[2])
@@ -499,9 +499,7 @@ class COCOeval:
 
                 
                 metrics_dict = {
-                    "map10": AP_010,
-                    "map20": AP_020,
-
+                   "map10": AP_010,
                     "map50": AP_050,
                     "map75": AP_075,
                     "map5095": AP_050_095,
@@ -548,12 +546,19 @@ class Params:
 
         # predefined 0.5 to 0.95 ious 
         fiveninetyfiveious = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+        fiveninetyfiveious = np.around(fiveninetyfiveious,3)
+
+
         self.fiveninetyfiveidxs = []
         self.imgIds = []
         self.catIds = []
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
-        self.iouThrs = np.append(np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True), [0.1,0.2])
-        self.recThrs = np.append(np.linspace(.0, 1.00, int(np.round((1.00 - .0) / .01)) + 1, endpoint=True),0.10)
+        self.iouThrs = np.linspace(.0, 1, int(np.round((1 - .0) / .05)) + 1, endpoint=True)
+        self.iouThrs = np.around(self.iouThrs,3)
+        self.recThrs = np.linspace(.0, 1.00, int(np.round((1.00 - .0) / .01)) + 1, endpoint=True) 
+        self.recThrs = np.around(self.recThrs,3)
+
+
         self.maxDets = [1, 10, 100]
         self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2],[0 ** 2, 1e5 ** 2]]
         self.areaRngLbl = ['all', 'small', 'medium', 'large', 'all']
