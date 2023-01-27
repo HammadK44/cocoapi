@@ -262,6 +262,7 @@ class COCOeval:
         # load computed ious
         ious = self.ious[imgId, catId][:, gtind] if len(self.ious[imgId, catId]) > 0 else self.ious[imgId, catId]
 
+
         T = len(p.iouThrs)
         G = len(gt)
         D = len(dt)
@@ -419,12 +420,13 @@ class COCOeval:
         toc = time.time()
         print('DONE (t={:0.2f}s).'.format( toc-tic))
 
-    def summarize(self):
+    def summarize(self, threshold=None):
         '''
         Compute and display summary metrics for evaluation results.
         Note this functin can *only* be applied on the default parameter setting
         '''
         def _summarize( ap=1, iouThr=None, areaRng='all', maxDets=100 ):
+            # 1, iouThr=0.10, maxDets=self.params.maxDets[2]
             p = self.params
             iStr = ' {:<18} {} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}'
             titleStr = 'Average Precision' if ap == 1 else 'Average Recall'
@@ -441,7 +443,14 @@ class COCOeval:
                 if iouThr is not None:
                     t = np.where(iouThr == p.iouThrs)[0]
                     s = s[t]
-                s = s[:,:,:,aind,mind]
+                
+                if ap == 1 and iouThr==None:
+                    s_fiveninetyfive_list = []
+                    for iouidx in p.fiveninetyfiveidxs:
+                        s_fiveninetyfive_list.append ( s[iouidx,:,:,aind,mind] ) 
+                    s = np.stack(s_fiveninetyfive_list)
+                else:
+                    s = s[:,:,:,aind,mind]
             else:
                 # dimension of recall: [TxKxAxM]
                 s = self.eval['recall']
@@ -456,34 +465,50 @@ class COCOeval:
             
             return mean_s
 
-        def _summarizeDets():
-            
-            print(self.params.catIds)
+        def _summarizeDets(threshold=None):
+            metrics_dict = dict() 
 
-            AP_050_095 = _summarize(1)
-            AP_010 = _summarize(1, iouThr=0.10, maxDets=self.params.maxDets[2])
-            AP_050 = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2])
-            AP_075 = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[2])
-            #AP_a_S = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2])
-            #AP_a_M = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2])
-            #AP_a_L = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2])
-            AR_MD_1 = _summarize(0, maxDets=self.params.maxDets[0])
-            AR_MD_10 = _summarize(0, maxDets=self.params.maxDets[1])
-            AR_MD_100 = _summarize(0, maxDets=self.params.maxDets[2])
-            #AR_a_S = _summarize(0, areaRng='small', maxDets=self.params.maxDets[2])
-            #AR_a_M = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2])
-            #AR_a_L = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2])
+            if threshold:
+                if type(threshold)==float:
+                    AP_thrs = _summarize(1, iouThr=threshold, maxDets=self.params.maxDets[2])
+                    metrics_dict[f"map{threshold}"] = AP_thrs
 
-            
-            metrics_dict = {
-                "map10": AP_010,
-                "map50": AP_050,
-                "map75": AP_075,
-                "map5095": AP_050_095,
-                "map10_11": "None",
-                "mar1": AR_MD_1,
-                "mar10": AR_MD_10,
-                "mar100": AR_MD_100}
+                elif type(threshold)==list:
+
+                    for thrs in threshold:
+                        AP_thrs = _summarize(1, iouThr=thrs, maxDets=self.params.maxDets[2])
+                        metrics_dict[f"map{thrs}"] = AP_thrs
+            else:
+                print(self.params.catIds)
+
+                AP_050_095 = _summarize(1)
+                AP_010 = _summarize(1, iouThr=0.10, maxDets=self.params.maxDets[2])
+                AP_020 = _summarize(1, iouThr=0.20, maxDets=self.params.maxDets[2])
+                AP_050 = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2])
+                AP_075 = _summarize(1, iouThr=.75, 
+                maxDets=self.params.maxDets[2])
+                #AP_a_S = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2])
+                #AP_a_M = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2])
+                #AP_a_L = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2])
+                AR_MD_1 = _summarize(0, maxDets=self.params.maxDets[0])
+                AR_MD_10 = _summarize(0, maxDets=self.params.maxDets[1])
+                AR_MD_100 = _summarize(0, maxDets=self.params.maxDets[2])
+                #AR_a_S = _summarize(0, areaRng='small', maxDets=self.params.maxDets[2])
+                #AR_a_M = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2])
+                #AR_a_L = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2])
+
+                
+                metrics_dict = {
+                    "map10": AP_010,
+                    "map20": AP_020,
+
+                    "map50": AP_050,
+                    "map75": AP_075,
+                    "map5095": AP_050_095,
+                    "map10_11": "None",
+                    "mar1": AR_MD_1,
+                    "mar10": AR_MD_10,
+                    "mar100": AR_MD_100}
 
 
             return metrics_dict
@@ -508,7 +533,7 @@ class COCOeval:
             summarize = _summarizeDets
         elif iouType == 'keypoints':
             summarize = _summarizeKps
-        self.stats = summarize()
+        self.stats = summarize(threshold=threshold)
 
         return self.stats
 
@@ -520,15 +545,24 @@ class Params:
     Params for coco evaluation api
     '''
     def setDetParams(self):
+
+        # predefined 0.5 to 0.95 ious 
+        fiveninetyfiveious = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+        self.fiveninetyfiveidxs = []
         self.imgIds = []
         self.catIds = []
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
-        self.iouThrs = np.append(np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True),0.10)
+        self.iouThrs = np.append(np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True), [0.1,0.2])
         self.recThrs = np.append(np.linspace(.0, 1.00, int(np.round((1.00 - .0) / .01)) + 1, endpoint=True),0.10)
         self.maxDets = [1, 10, 100]
         self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2],[0 ** 2, 1e5 ** 2]]
         self.areaRngLbl = ['all', 'small', 'medium', 'large', 'all']
         self.useCats = 1
+
+        for iou in fiveninetyfiveious:
+            place = np.where(self.iouThrs==iou)
+            self.fiveninetyfiveidxs.append(place[0][0])
+
 
     def setKpParams(self):
         self.imgIds = []
