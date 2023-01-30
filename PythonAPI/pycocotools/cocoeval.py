@@ -409,6 +409,7 @@ class COCOeval:
                             pass
                         precision[t,:,k,a,m] = np.array(q)
                         scores[t,:,k,a,m] = np.array(ss)
+
         self.eval = {
             'params': p,
             'counts': [T, R, K, A, M],
@@ -419,6 +420,37 @@ class COCOeval:
         }
         toc = time.time()
         print('DONE (t={:0.2f}s).'.format( toc-tic))
+
+    def plotPrecisionRecallGraph(self,  iouThr=0.5 ,class_idx = 1):
+        def _plotPrecisionGraph(class_idx, iouThr, areaRng='all', maxDets=100 ):
+            # 1, iouThr=0.10, maxDets=self.params.maxDets[2]
+            p = self.params
+            iStr = ' {:<18} {} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}'
+            titleStr = 'Average Precision' 
+            ap=1
+            iouStr = '{:0.2f}:{:0.2f}'.format(p.iouThrs[0], p.iouThrs[-1]) \
+                if iouThr is None else '{:0.2f}'.format(iouThr)
+
+            # If arearng will change, modify below later.
+            aind = [i for i, aRng in enumerate(p.areaRngLbl) if aRng == areaRng][-1]
+            mind = [i for i, mDet in enumerate(p.maxDets) if mDet == maxDets]
+
+            # dimension of precision: [TxRxKxAxM]
+            s = self.eval['precision']
+            # IoU
+            t = np.where(iouThr == p.iouThrs)[0]
+            s = s[t,:,class_idx,aind,mind][0]
+
+
+            xy_points = []
+            for i in range(101):
+                xy_points.append({"x":i/100,"y":s[i]})
+            return xy_points
+
+
+        xy_points = _plotPrecisionGraph(class_idx, iouThr=iouThr)
+
+        return xy_points
 
     def summarize(self, threshold=None):
         '''
@@ -532,7 +564,6 @@ class COCOeval:
         elif iouType == 'keypoints':
             summarize = _summarizeKps
         self.stats = summarize(threshold=threshold)
-
         return self.stats
 
     def __str__(self):
